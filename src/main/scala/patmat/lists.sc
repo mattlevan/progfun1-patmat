@@ -1,3 +1,5 @@
+import patmat.Huffman._
+
 def times(chars: List[Char]): List[(Char, Int)] = {
   def help(chars: List[Char], xs: List[(Char, Int)]): List[(Char, Int)] =
     chars match {
@@ -25,3 +27,8 @@ val xs = List(3, 4, 5)
 val z = 1
 
 z :: xs
+
+val leaf = Leaf('a', 2)
+var fork = Fork(leaf, leaf, List('a'), 2)
+leaf.weight
+fork.weight

@@ -7,7 +7,6 @@ import common._
  *
  */
 object Huffman {
-
   /**
    * A huffman code is represented by a binary tree.
    *
@@ -18,8 +17,9 @@ object Huffman {
    * present in the leaves below it. The weight of a `Fork` node is the sum of the weights of these
    * leaves.
    */
-  abstract class CodeTree
-  case class Fork(left: CodeTree, right: CodeTree, chars: List[Char], weight: Int) extends CodeTree
+  abstract class CodeTree { val weight: Int }
+  case class Fork(left: CodeTree, right: CodeTree, chars: List[Char], weight: Int)
+    extends CodeTree
   case class Leaf(char: Char, weight: Int) extends CodeTree
   
 
@@ -34,7 +34,7 @@ object Huffman {
     case Leaf(char, _) => char :: Nil
   }
   
-  def makeCodeTree(left: CodeTree, right: CodeTree) =
+  def makeCodeTree(left: CodeTree, right: CodeTree): Fork =
     Fork(left, right, chars(left) ::: chars(right), weight(left) + weight(right))
 
 
@@ -103,27 +103,25 @@ object Huffman {
    * of a leaf is the frequency of the character.
    */
   def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
-    def help(freqs: List[(Char, Int)], acc: List[Leaf]): List[Leaf] = {
+    def isort(freqs: List[(Char, Int)]): List[(Char, Int)] =
       freqs match {
-        case Nil    => acc
-        case h :: _ => findMin(freqs, h) :: acc
+        case Nil    => Nil
+        case h :: t => insert(h, isort(t))
       }
-    }
 
-    def findMin(freqs: List[(Char, Int)], min: (Char, Int)): Leaf = {
-      freqs match {
-        case Nil    => Leaf(min._1, min._2)
-        case h :: t => if (h._2 < min._2) findMin(t, h) else findMin(t, min)
+    def insert(x: (Char, Int), xs: List[(Char, Int)]): List[(Char, Int)] =
+      xs match {
+        case Nil    => List(x)
+        case h :: t => if (x._2 < h._2) x :: xs else h :: insert(x, t)
       }
-    }
 
-    help(freqs, List())
+    isort(freqs).map(p => Leaf(p._1, p._2))
   }
   
   /**
    * Checks whether the list `trees` contains only one single code tree.
    */
-  def singleton(trees: List[CodeTree]): Boolean = ???
+  def singleton(trees: List[CodeTree]): Boolean = trees.length == 1
   
   /**
    * The parameter `trees` of this function is a list of code trees ordered
@@ -137,7 +135,16 @@ object Huffman {
    * If `trees` is a list of less than two elements, that list should be returned
    * unchanged.
    */
-  def combine(trees: List[CodeTree]): List[CodeTree] = ???
+  def combine(trees: List[CodeTree]): List[CodeTree] = {
+    def insert(f: CodeTree, trees: List[CodeTree]): List[CodeTree] =
+      trees match {
+        case Nil    => Nil
+        case h :: t => if (f.weight < h.weight) f :: trees else h :: insert(f, t)
+      }
+
+    if (trees.length < 2) trees
+    else insert(makeCodeTree(trees.head, trees.tail.head), trees.tail.tail)
+  }
   
   /**
    * This function will be called in the following way:
@@ -186,7 +193,7 @@ object Huffman {
 
   /**
    * What does the secret message say? Can you decode it?
-   * For the decoding use the `frenchCode' Huffman tree defined above.
+   * For the decoding use the `frenchCode` Huffman tree defined above.
    */
   val secret: List[Bit] = List(0,0,1,1,1,0,1,0,1,1,1,0,0,1,1,0,1,0,0,1,1,0,1,0,1,1,0,0,1,1,1,1,1,0,1,0,1,1,0,0,0,0,1,0,1,1,1,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,1)
 
