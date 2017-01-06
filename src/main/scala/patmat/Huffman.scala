@@ -248,16 +248,16 @@ object Huffman {
         case h :: t => parseText(t, bits ::: getBits(h, tree, List()))
       }
 
-    def getBits(c: Char, tree: CodeTree, bits: List[Bit]): List[Bit] =
-      tree match {
-        case Fork(l, r, _, _) =>
-          getBits(c, l, bits :+ 0) ::: getBits(c, r, bits :+ 1)
-        case Leaf(char, _)    =>
-          if (char == c) bits else Nil
-      }
-
     parseText(text, List())
   }
+
+  def getBits(c: Char, tree: CodeTree, bits: List[Bit]): List[Bit] =
+    tree match {
+      case Fork(l, r, _, _) =>
+          getBits(c, l, bits :+ 0) ::: getBits(c, r, bits :+ 1)
+      case Leaf(char, _)    =>
+        if (char == c) bits else Nil
+    }
 
 
   // Part 4b: Encoding using code table
@@ -268,7 +268,11 @@ object Huffman {
    * This function returns the bit sequence that represents the character `char` in
    * the code table `table`.
    */
-  def codeBits(table: CodeTable)(char: Char): List[Bit] = ???
+  def codeBits(table: CodeTable)(char: Char): List[Bit] =
+    table match {
+      case Nil => Nil
+      case h :: t => if (h._1 == char) h._2 else codeBits(t)(char)
+    }
   
   /**
    * Given a code tree, create a code table which contains, for every character in the
@@ -277,8 +281,19 @@ object Huffman {
    * Hint: think of a recursive solution: every sub-tree of the code tree `tree` is itself
    * a valid code tree that can be represented as a code table. Using the code tables of the
    * sub-trees, think of how to build the code table for the entire tree.
+   *
+   * type CodeTable = List[(Char, List[Bit])]
    */
-  def convert(tree: CodeTree): CodeTable = ???
+  def convert(tree: CodeTree): CodeTable = {
+    def traverse(tree: CodeTree, bits: List[Bit]): CodeTable =
+      tree match {
+        case Fork(l, r, _, _) => traverse(l, bits :+ 0) ::: traverse(r, bits :+ 1)
+        case Leaf(char, _)    => List((char, bits))
+      }
+
+    traverse(tree, List())
+  }
+
   
   /**
    * This function takes two code tables and merges them into one. Depending on how you
@@ -294,4 +309,4 @@ object Huffman {
    * and then uses it to perform the actual encoding.
    */
   def quickEncode(tree: CodeTree)(text: List[Char]): List[Bit] = ???
-  }
+}
